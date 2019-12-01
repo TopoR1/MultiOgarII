@@ -40,12 +40,3 @@ class Mode {
 }
 
 module.exports = Mode;
-
-
-
-
-
-
-
-
-
