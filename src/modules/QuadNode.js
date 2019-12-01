@@ -33,7 +33,7 @@ class QuadNode {
     }
     insert(item) {
         if (this.childNodes.length != 0) {
-            var quad = this.getQuad(item.bound);
+            const quad = this.getQuad(item.bound);
             if (quad !== -1)
                 return this.childNodes[quad].insert(item);
         }
@@ -42,16 +42,16 @@ class QuadNode {
         // split and rebalance current node
         if (this.childNodes.length == 0 && this.items.length > maxItemCount) {
             // split into 4 subnodes
-            var minx = this.bound.minx;
-            var miny = this.bound.miny;
-            var midx = this.bound.cx;
-            var midy = this.bound.cy;
-            var maxx = this.bound.maxx;
-            var maxy = this.bound.maxy;
-            var nw = new Quad(minx, miny, midx, midy);
-            var ne = new Quad(midx, miny, maxx, midy);
-            var sw = new Quad(minx, midy, midx, maxy);
-            var se = new Quad(midx, midy, maxx, maxy);
+            const minx = this.bound.minx;
+            const miny = this.bound.miny;
+            const midx = this.bound.cx;
+            const midy = this.bound.cy;
+            const maxx = this.bound.maxx;
+            const maxy = this.bound.maxy;
+            const nw = new Quad(minx, miny, midx, midy);
+            const ne = new Quad(midx, miny, maxx, midy);
+            const sw = new Quad(minx, midy, midx, maxy);
+            const se = new Quad(midx, midy, maxx, maxy);
             this.childNodes.push(new QuadNode(nw));
             this.childNodes.push(new QuadNode(ne));
             this.childNodes.push(new QuadNode(sw));
