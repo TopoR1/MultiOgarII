@@ -1,4 +1,4 @@
-var FFA = require('./FFA'); // Base gamemode
+const FFA = require('./FFA'); // Base gamemode
 
 class Rainbow extends FFA{
     constructor() {
@@ -46,18 +46,14 @@ class Rainbow extends FFA{
     onServerInit() { }
     onTick(server) {
         // Change color
-        for (var i in server.nodes) {
-            var node = server.nodes[i];
+        for (const i in server.nodes) {
+            const node = server.nodes[i];
             if (!node)
                 continue;
             this.changeColor(node, server);
         }
-        ;
     }
 }
 
 module.exports = Rainbow;
 Rainbow.prototype = new FFA();
-
-
-
