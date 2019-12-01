@@ -6,10 +6,10 @@ class SetBorder {
         this.serverName = serverName;
     }
     build(protocol) {
-        var scrambleX = this.playerTracker.scrambleX;
-        var scrambleY = this.playerTracker.scrambleY;
+        const scrambleX = this.playerTracker.scrambleX;
+        const scrambleY = this.playerTracker.scrambleY;
         if (this.gameType == null) {
-            var buffer = Buffer.alloc(33);
+            const buffer = Buffer.alloc(33);
             buffer.writeUInt8(0x40, 0, true);
             buffer.writeDoubleLE(this.border.minx + scrambleX, 1, true);
             buffer.writeDoubleLE(this.border.miny + scrambleY, 9, true);
@@ -17,15 +17,15 @@ class SetBorder {
             buffer.writeDoubleLE(this.border.maxy + scrambleY, 25, true);
             return buffer;
         }
-        var BinaryWriter = require("./BinaryWriter");
-        var writer = new BinaryWriter();
+        const BinaryWriter = require("./BinaryWriter");
+        const writer = new BinaryWriter();
         writer.writeUInt8(0x40); // Packet ID
         writer.writeDouble(this.border.minx + scrambleX);
         writer.writeDouble(this.border.miny + scrambleY);
         writer.writeDouble(this.border.maxx + scrambleX);
         writer.writeDouble(this.border.maxy + scrambleY);
         writer.writeUInt32(this.gameType >> 0);
-        var name = this.serverName;
+        let name = this.serverName;
         if (name == null)
             name = "";
         if (protocol < 6)
