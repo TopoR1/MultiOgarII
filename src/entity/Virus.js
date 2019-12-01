@@ -56,7 +56,7 @@ class Virus extends Cell {
             return this.explodeCell(cell, splits);
         }
         // half-half splits
-        let splitMass = cellMass / 2;
+        splitMass = cellMass / 2;
         let massLeft = cellMass / 2;
         while (cellsLeft-- > 0) {
             if (massLeft / cellsLeft < splitMin) {
