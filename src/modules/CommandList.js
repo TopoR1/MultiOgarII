@@ -52,7 +52,9 @@ class CommandsList {
             console.log(`- name: ${client._name || "none"}`);
             console.log(`- cells: ${client.cells.length}`);
             console.log(`- score: ${Math.floor(client._score)}`);
-            console.log(`- position: {x: ${Math.floor(client.centerPos.x)}, y: ${Math.floor(client.centerPos.y)}}`);
+            console.log(
+                `- position: {x: ${Math.floor(client.centerPos.x)}, y: ${Math.floor(client.centerPos.y)}}`
+            );
             console.log(`\n`);
         });
     };
@@ -66,7 +68,7 @@ class CommandsList {
             return Logger.warn(`Please provide a numerical player ID.`);
         };
 
-        for (let key in server.clients) {
+        for (const key in server.clients) {
             const client = server.clients[key].playerTracker;
             
             // Check if server is empty.
@@ -181,14 +183,14 @@ class CommandsList {
             return Logger.warn(`Please provide a numerical player ID.`);
         };
 
-        if(isNaN(mass)) {
+        if (isNaN(mass)) {
             return Logger.warn(`Please provide a numerical mass.`);
         };
 
         server.clients.forEach(socket => {
             const client = socket.playerTracker;
 
-            if(client.pID == ID) {
+            if (client.pID == ID) {
                 client.cells.forEach(cell => {
                     cell.setSize(mass);
                 });
@@ -207,10 +209,14 @@ class CommandsList {
     };
 
     stats(server, args) {
-        Logger.info(`Connected players: ${server.clients.length} / ${server.config.serverMaxConnections}`);
+        Logger.info(
+            `Connected players: ${server.clients.length} / ${server.config.serverMaxConnections}`
+        );
         Logger.info(`Clients: ${server.clients.length}`);
         Logger.info(`Server uptime: ${Math.floor(process.uptime() / 60)}`);
-        Logger.info(`Process memory usage ${Math.round(process.memoryUsage().heapUsed / 1048576 * 10) / 10 }/${Math.round(process.memoryUsage().heapTotal / 1048576 * 10) / 10} mb`);
+        Logger.info(
+            `Process memory usage ${Math.round(process.memoryUsage().heapUsed / 1048576 * 10) / 10 }/${Math.round(process.memoryUsage().heapTotal / 1048576 * 10) / 10} mb`
+        );
         Logger.info(`Update time: ${server.updateTimeAvg.toFixed(3)}ms`);
     }
 
@@ -220,10 +226,10 @@ class CommandsList {
 
         commands.forEach(command => {
             const commandObj = CommandsList.prototype[command]; // Command object.
-            const aliasName = commandObj.name[0] + commandObj.name[commandObj.name.length - 1]; // Alias name.
+            let aliasName = commandObj.name[0] + commandObj.name[commandObj.name.length - 1]; // Alias name.
             
             // Ignore aliases, only print commands.
-            if(CommandsList.prototype[commandObj.name]) {
+            if (CommandsList.prototype[commandObj.name]) {
                 CommandsList.prototype[aliasName] = (server, args) => CommandsList.prototype[commandObj.name](server, args);
                 CommandsList.prototype[aliasName].isAlias = true;
             };
