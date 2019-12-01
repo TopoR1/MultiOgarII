@@ -1,4 +1,4 @@
-var Mode = require('./Mode');
+const Mode = require('./Mode');
 
 class Teams extends Mode{
     constructor() {
@@ -32,7 +32,7 @@ class Teams extends Mode{
         return component;
     }
     getTeamColor(team) {
-        var color = this.colors[team];
+        const color = this.colors[team];
         return {
             r: this.fuzzColorComponent(color.r),
             b: this.fuzzColorComponent(color.b),
@@ -48,16 +48,16 @@ class Teams extends Mode{
     }
     onServerInit(server) {
         // Set up teams
-        for (var i = 0; i < this.teamAmount; i++) {
+        for (let i = 0; i < this.teamAmount; i++) {
             this.nodes[i] = [];
         }
         // migrate current players to team mode
-        for (var i = 0; i < server.clients.length; i++) {
-            var client = server.clients[i].playerTracker;
+        for (let i = 0; i < server.clients.length; i++) {
+            let client = server.clients[i].playerTracker;
             this.onPlayerInit(client);
             client.color = this.getTeamColor(client.team);
-            for (var j = 0; j < client.cells.length; j++) {
-                var cell = client.cells[j];
+            for (let j = 0; j < client.cells.length; j++) {
+                let cell = client.cells[j];
                 cell.color = client.color;
                 this.nodes[client.team].push(cell);
             }
@@ -73,23 +73,23 @@ class Teams extends Mode{
     }
     onCellRemove(cell) {
         // Remove from team list
-        var index = this.nodes[cell.owner.team].indexOf(cell);
+        const index = this.nodes[cell.owner.team].indexOf(cell);
         if (index != -1) {
             this.nodes[cell.owner.team].splice(index, 1);
         }
     }
     onCellMove(cell, server) {
         // Find team
-        for (var i = 0; i < cell.owner.visibleNodes.length; i++) {
+        for (let i = 0; i < cell.owner.visibleNodes.length; i++) {
             // Only collide with player cells
-            var check = cell.owner.visibleNodes[i];
+            const check = cell.owner.visibleNodes[i];
             if ((check.type != 0) || (cell.owner == check.owner)) {
                 continue;
             }
             // Collision with teammates
-            var team = cell.owner.team;
+            const team = cell.owner.team;
             if (check.owner.team == team) {
-                var manifold = server.checkCellCollision(cell, check); // Calculation info
+                let manifold = server.checkCellCollision(cell, check); // Calculation info
                 if (manifold != null) { // Collided
                     // Cant eat team members
                     !manifold.check.canEat(manifold.cell);
@@ -99,15 +99,15 @@ class Teams extends Mode{
     }
     updateLB(server) {
         server.leaderboardType = this.packetLB;
-        var total = 0;
-        var teamMass = [];
+        let total = 0;
+        let teamMass = [];
         // Get mass
-        for (var i = 0; i < this.teamAmount; i++) {
+        for (let i = 0; i < this.teamAmount; i++) {
             // Set starting mass
             teamMass[i] = 0;
             // Loop through cells
-            for (var j = 0; j < this.nodes[i].length; j++) {
-                var cell = this.nodes[i][j];
+            for (let j = 0; j < this.nodes[i].length; j++) {
+                const cell = this.nodes[i][j];
                 if (!cell)
                     continue;
                 teamMass[i] += cell._mass;
@@ -116,13 +116,13 @@ class Teams extends Mode{
         }
         // No players
         if (total <= 0) {
-            for (var i = 0; i < this.teamAmount; i++) {
+            for (let i = 0; i < this.teamAmount; i++) {
                 server.leaderboard[i] = 0;
             }
             return;
         }
         // Calc percentage
-        for (var i = 0; i < this.teamAmount; i++) {
+        for (let i = 0; i < this.teamAmount; i++) {
             server.leaderboard[i] = teamMass[i] / total;
         }
     }
@@ -130,13 +130,3 @@ class Teams extends Mode{
 
 module.exports = Teams;
 Teams.prototype = new Mode();
-
-
-
-
-
-
-
-
-
-
