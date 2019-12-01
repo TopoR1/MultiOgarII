@@ -1,5 +1,5 @@
-var Packet = require('./packet');
-var BinaryReader = require('./packet/BinaryReader');
+const Packet = require('./packet');
+const BinaryReader = require('./packet/BinaryReader');
 
 class PacketHandler {
     constructor(server, socket) {
@@ -32,7 +32,7 @@ class PacketHandler {
             return;
         this.handshakeProtocol = message[1] | (message[2] << 8) | (message[3] << 16) | (message[4] << 24);
         if (this.handshakeProtocol < 1 || this.handshakeProtocol > 18) {
-            this.socket.close(1002, "Not supported protocol: " + this.handshakeProtocol);
+            this.socket.close(1002, `Not supported protocol: ${this.handshakeProtocol}`);
             return;
         }
         this.handler = {
@@ -66,9 +66,11 @@ class PacketHandler {
         this.protocol = protocol;
         // Send handshake response
         this.sendPacket(new Packet.ClearAll());
-        this.sendPacket(new Packet.SetBorder(this.socket.playerTracker, this.server.border, this.server.config.serverGamemode, "MultiOgarII " + this.server.version));
+        this.sendPacket(
+            new Packet.SetBorder(this.socket.playerTracker, this.server.border, this.server.config.serverGamemode, `MultiOgarII ${this.server.version}`)
+        );
         // Send welcome message
-        this.server.sendChatMessage(null, this.socket.playerTracker, "MultiOgarII " + this.server.version);
+        this.server.sendChatMessage(null, this.socket.playerTracker, `MultiOgarII ${this.server.version}`);
         if (this.server.config.serverWelcome1)
             this.server.sendChatMessage(null, this.socket.playerTracker, this.server.config.serverWelcome1);
         if (this.server.config.serverWelcome2)
@@ -76,18 +78,22 @@ class PacketHandler {
         if (this.server.config.serverChat == 0)
             this.server.sendChatMessage(null, this.socket.playerTracker, "This server's chat is disabled.");
         if (this.protocol < 4)
-            this.server.sendChatMessage(null, this.socket.playerTracker, "WARNING: Protocol " + this.protocol + " assumed as 4!");
+            this.server.sendChatMessage(
+                null,
+                this.socket.playerTracker,
+                `WARNING: Protocol ${this.protocol} assumed as 4!`
+            );
     }
     message_onJoin(message) {
-        var tick = this.server.ticks;
-        var dt = tick - this.lastJoinTick;
+        const tick = this.server.ticks;
+        const dt = tick - this.lastJoinTick;
         this.lastJoinTick = tick;
         if (dt < 25 || this.socket.playerTracker.cells.length !== 0) {
             return;
         }
-        var reader = new BinaryReader(message);
+        const reader = new BinaryReader(message);
         reader.skipBytes(1);
-        var text = null;
+        let text = null;
         if (this.protocol < 6)
             text = reader.readStringZeroUnicode();
         else
@@ -117,8 +123,8 @@ class PacketHandler {
     message_onKeyQ(message) {
         if (message.length !== 1)
             return;
-        var tick = this.server.tickCoutner;
-        var dt = tick - this.lastQTick;
+        const tick = this.server.tickCoutner;
+        const dt = tick - this.lastQTick;
         if (dt < this.server.config.ejectCooldown) {
             return;
         }
@@ -158,19 +164,19 @@ class PacketHandler {
     message_onChat(message) {
         if (message.length < 3)
             return;
-        var tick = this.server.ticks;
-        var dt = tick - this.lastChatTick;
+        const tick = this.server.ticks;
+        const dt = tick - this.lastChatTick;
         this.lastChatTick = tick;
         if (dt < 25 * 2) {
             return;
         }
-        var flags = message[1]; // flags
-        var rvLength = (flags & 2 ? 4 : 0) + (flags & 4 ? 8 : 0) + (flags & 8 ? 16 : 0);
+        const flags = message[1]; // flags
+        const rvLength = (flags & 2 ? 4 : 0) + (flags & 4 ? 8 : 0) + (flags & 8 ? 16 : 0);
         if (message.length < 3 + rvLength) // second validation
             return;
-        var reader = new BinaryReader(message);
+        const reader = new BinaryReader(message);
         reader.skipBytes(2 + rvLength); // reserved
-        var text = null;
+        let text = null;
         if (this.protocol < 6)
             text = reader.readStringZeroUnicode();
         else
@@ -180,8 +186,8 @@ class PacketHandler {
     message_onStat(message) {
         if (message.length !== 1)
             return;
-        var tick = this.server.ticks;
-        var dt = tick - this.lastStatTick;
+        const tick = this.server.ticks;
+        const dt = tick - this.lastStatTick;
         this.lastStatTick = tick;
         if (dt < 25) {
             return;
@@ -191,8 +197,8 @@ class PacketHandler {
     processMouse() {
         if (this.mouseData == null)
             return;
-        var client = this.socket.playerTracker;
-        var reader = new BinaryReader(this.mouseData);
+        const client = this.socket.playerTracker;
+        const reader = new BinaryReader(this.mouseData);
         reader.skipBytes(1);
         if (this.mouseData.length === 13) {
             // protocol late 5, 6, 7
@@ -233,27 +239,27 @@ class PacketHandler {
         this.processMouse();
     }
     getRandomSkin() {
-        var randomSkins = [];
-        var fs = require("fs");
+        let randomSkins = [];
+        const fs = require("fs");
         if (fs.existsSync("../src/randomskins.txt")) {
             // Read and parse the Skins - filter out whitespace-only Skins
-            randomSkins = fs.readFileSync("../src/randomskins.txt", "utf8").split(/[\r\n]+/).filter(function (x) {
+            randomSkins = fs.readFileSync("../src/randomskins.txt", "utf8").split(/[\r\n]+/).filter(x => {
                 return x != ''; // filter empty Skins
             });
         }
         // Picks a random skin
         if (randomSkins.length > 0) {
-            var index = (randomSkins.length * Math.random()) >>> 0;
-            var rSkin = randomSkins[index];
+            const index = (randomSkins.length * Math.random()) >>> 0;
+            const rSkin = randomSkins[index];
         }
         return rSkin;
     }
     setNickname(text) {
-        var name = "", skin = null;
+        let name = "", skin = null;
         if (text != null && text.length > 0) {
-            var skinName = null, userName = text, n = -1;
+            let skinName = null, userName = text, n = -1;
             if (text[0] == '<' && (n = text.indexOf('>', 1)) >= 1) {
-                var inner = text.slice(1, n);
+                const inner = text.slice(1, n);
                 if (n > 1)
                     skinName = (inner == "r") ? this.getRandomSkin() : inner;
                 else
@@ -272,11 +278,11 @@ class PacketHandler {
         this.socket.playerTracker.joinGame(name, skin);
     }
     sendPacket(packet) {
-        var socket = this.socket;
+        const socket = this.socket;
         if (!packet || socket.isConnected == null || socket.playerTracker.isMi)
             return;
         if (socket.readyState == this.server.WebSocket.OPEN) {
-            var buffer = packet.build(this.protocol);
+            const buffer = packet.build(this.protocol);
             if (buffer)
                 socket.send(buffer, { binary: true });
         }
