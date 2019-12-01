@@ -30,14 +30,14 @@ class Experimental extends FFA {
         server.run = true;
         // Ovveride functions for special virus mechanics
         const self = this;
-        Entity.Virus.prototype.onEat = function (prey) {
+        Entity.Virus.prototype.onEat = function(prey) {
             // Pushes the virus
             this.setBoost(220, prey.boostDirection.angle());
         };
-        Entity.MotherCell.prototype.onAdd = function () {
+        Entity.MotherCell.prototype.onAdd = function() {
             self.nodesMother.push(this);
         };
-        Entity.MotherCell.prototype.onRemove = function () {
+        Entity.MotherCell.prototype.onRemove = function() {
             const index = self.nodesMother.indexOf(this);
             if (index != -1)
                 self.nodesMother.splice(index, 1);
@@ -64,7 +64,3 @@ class Experimental extends FFA {
 
 module.exports = Experimental;
 Experimental.prototype = new FFA();
-
-
-
-
