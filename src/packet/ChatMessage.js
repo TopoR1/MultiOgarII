@@ -4,12 +4,12 @@ class ChatMessage {
         this.message = message;
     }
     build(protocol) {
-        var text = this.message;
+        let text = this.message;
         if (text == null)
             text = "";
 
-        var name = "SERVER";
-        var color = { 'r': 0x9B, 'g': 0x9B, 'b': 0x9B };
+        let name = "SERVER";
+        let color = { 'r': 0x9B, 'g': 0x9B, 'b': 0x9B };
         if (this.sender != null) {
             name = this.sender._name;
             if (name == null || name.length == 0) {
@@ -23,13 +23,13 @@ class ChatMessage {
             }
         }
 
-        var UserRoleEnum = require("../enum/UserRoleEnum");
-        var BinaryWriter = require("./BinaryWriter");
-        var writer = new BinaryWriter();
+        const UserRoleEnum = require("../enum/UserRoleEnum");
+        const BinaryWriter = require("./BinaryWriter");
+        const writer = new BinaryWriter();
         writer.writeUInt8(0x63); // message id (decimal 99)
 
         // flags
-        var flags = 0;
+        let flags = 0;
         if (this.sender == null)
             flags = 0x80; // server message
         else if (this.sender.userRole == UserRoleEnum.ADMIN)
