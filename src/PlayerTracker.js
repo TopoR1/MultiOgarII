@@ -1,7 +1,7 @@
-var Packet = require('./packet');
-var Vec2 = require('./modules/Vec2');
-var BinaryWriter = require("./packet/BinaryWriter");
-var {Quad} = require("./modules/QuadNode.js");
+const Packet = require('./packet');
+const Vec2 = require('./modules/Vec2');
+const BinaryWriter = require("./packet/BinaryWriter");
+let {Quad} = require("./modules/QuadNode.js");
 
 class PlayerTracker {
     constructor(server, socket) {
@@ -62,7 +62,7 @@ class PlayerTracker {
             // Only scramble if enabled in config
             this.scramble();
         }
-        var UserRoleEnum = require("./enum/UserRoleEnum");
+        const UserRoleEnum = require("./enum/UserRoleEnum");
         this.userRole = UserRoleEnum.GUEST;
     }
     // Setters/Getters
@@ -75,10 +75,10 @@ class PlayerTracker {
         else {
             this.scrambleId = (Math.random() * 0xFFFFFFFF) >>> 0;
             // avoid mouse packet limitations
-            var maxx = Math.max(0, 31767 - this.server.border.width);
-            var maxy = Math.max(0, 31767 - this.server.border.height);
-            var x = maxx * Math.random();
-            var y = maxy * Math.random();
+            const maxx = Math.max(0, 31767 - this.server.border.width);
+            const maxy = Math.max(0, 31767 - this.server.border.height);
+            let x = maxx * Math.random();
+            let y = maxy * Math.random();
             if (Math.random() >= 0.5)
                 x = -x;
             if (Math.random() >= 0.5)
@@ -90,7 +90,7 @@ class PlayerTracker {
     }
     setName(name) {
         this._name = name;
-        var writer = new BinaryWriter();
+        let writer = new BinaryWriter();
         writer.writeStringZeroUnicode(name);
         this._nameUnicode = writer.toBuffer();
         writer = new BinaryWriter();
@@ -99,17 +99,17 @@ class PlayerTracker {
     }
     setSkin(skin) {
         this._skin = skin;
-        var writer = new BinaryWriter();
+        const writer = new BinaryWriter();
         writer.writeStringZeroUtf8(skin);
         this._skinUtf8 = writer.toBuffer();
-        var writer1 = new BinaryWriter();
-        writer1.writeStringZeroUtf8("%" + skin);
+        const writer1 = new BinaryWriter();
+        writer1.writeStringZeroUtf8(`%${skin}`);
         this._skinUtf8protocol11 = writer1.toBuffer();
     }
     getScale() {
         this._score = 0; // reset to not cause bugs with leaderboard
-        var scale = 0; // reset to not cause bugs with viewbox
-        for (var i = 0; i < this.cells.length; i++) {
+        let scale = 0; // reset to not cause bugs with viewbox
+        for (let i = 0; i < this.cells.length; i++) {
             scale += this.cells[i]._size;
             this._score += this.cells[i]._mass;
         }
@@ -129,7 +129,7 @@ class PlayerTracker {
         this.spectate = false;
         this.freeRoam = false;
         this.spectateTarget = null;
-        var packetHandler = this.socket.packetHandler;
+        const packetHandler = this.socket.packetHandler;
         if (!this.isMi && this.socket.isConnected != null) {
             // some old clients don't understand ClearAll message
             // so we will send update for them
@@ -144,9 +144,9 @@ class PlayerTracker {
                 packetHandler.sendPacket(new Packet.SetBorder(this, this.server.border));
             }
             else if (this.server.config.serverScrambleLevel == 3) {
-                var ran = 10065536 * Math.random();
+                const ran = 10065536 * Math.random();
                 // Ruins most known minimaps (no border)
-                var border = new Quad(
+                const border = new Quad(
                     this.server.border.minx - ran,
                     this.server.border.miny - ran,
                     this.server.border.maxx + ran,
@@ -161,8 +161,8 @@ class PlayerTracker {
         // Handle disconnection
         if (!this.socket.isConnected) {
             // Wait for playerDisconnectTime
-            var pt = this.server.config.playerDisconnectTime;
-            var dt = (this.server.stepDateTime - this.socket.closeTime) / 1e3;
+            const pt = this.server.config.playerDisconnectTime;
+            let dt = (this.server.stepDateTime - this.socket.closeTime) / 1e3;
             if (pt && (!this.cells.length || dt >= pt)) {
                 // Remove all client cells
                 while (this.cells.length)
@@ -193,9 +193,9 @@ class PlayerTracker {
             return;
         // update viewbox
         this.updateSpecView(this.cells.length);
-        var scale = Math.max(this.getScale(), this.server.config.serverMinScale);
-        var halfWidth = (this.server.config.serverViewBaseX + 100) / scale / 2;
-        var halfHeight = (this.server.config.serverViewBaseY + 100) / scale / 2;
+        const scale = Math.max(this.getScale(), this.server.config.serverMinScale);
+        const halfWidth = (this.server.config.serverViewBaseX + 100) / scale / 2;
+        const halfHeight = (this.server.config.serverViewBaseY + 100) / scale / 2;
         this.viewBox = new Quad(
             this.centerPos.x - halfWidth,
             this.centerPos.y - halfHeight,
@@ -204,11 +204,11 @@ class PlayerTracker {
         );
         // update visible nodes
         this.viewNodes = [];
-        var self = this;
-        this.server.quadTree.find(this.viewBox, function (check) {
+        const self = this;
+        this.server.quadTree.find(this.viewBox, check => {
             self.viewNodes.push(check);
         });
-        this.viewNodes.sort(function (a, b) { return a.nodeId - b.nodeId; });
+        this.viewNodes.sort((a, b) => { return a.nodeId - b.nodeId; });
     }
     sendUpdate() {
         if (this.isRemoved || !this.socket.packetHandler.protocol ||
@@ -219,12 +219,12 @@ class PlayerTracker {
             // also do not send if initialization is not complete yet
             return;
         }
-        var packetHandler = this.socket.packetHandler;
+        const packetHandler = this.socket.packetHandler;
         if (this.server.config.serverScrambleLevel == 2) {
             // scramble (moving border)
             if (!this.borderCounter) {
-                var b = this.server.border, v = this.viewBox;
-                var bound = new Quad(
+                const b = this.server.border, v = this.viewBox;
+                const bound = new Quad(
                     Math.max(b.minx, v.minx - v.halfWidth),
                     Math.max(b.miny, v.miny - v.halfHeight),
                     Math.min(b.maxx, v.maxx + v.halfWidth),
@@ -235,12 +235,12 @@ class PlayerTracker {
             if (++this.borderCounter >= 20)
                 this.borderCounter = 0;
         }
-        var delNodes = [];
-        var eatNodes = [];
-        var addNodes = [];
-        var updNodes = [];
-        var oldIndex = 0;
-        var newIndex = 0;
+        const delNodes = [];
+        const eatNodes = [];
+        const addNodes = [];
+        const updNodes = [];
+        let oldIndex = 0;
+        let newIndex = 0;
         for (; newIndex < this.viewNodes.length && oldIndex < this.clientNodes.length;) {
             if (this.viewNodes[newIndex].nodeId < this.clientNodes[oldIndex].nodeId) {
                 if (this.viewNodes[newIndex].isRemoved)
@@ -250,7 +250,7 @@ class PlayerTracker {
                 continue;
             }
             if (this.viewNodes[newIndex].nodeId > this.clientNodes[oldIndex].nodeId) {
-                var node = this.clientNodes[oldIndex];
+                const node = this.clientNodes[oldIndex];
                 if (node.isRemoved)
                     eatNodes.push(node);
                 else
@@ -258,7 +258,7 @@ class PlayerTracker {
                 oldIndex++;
                 continue;
             }
-            var node = this.viewNodes[newIndex];
+            const node = this.viewNodes[newIndex];
             if (node.isRemoved)
                 continue;
             // only send update for moving or player nodes
@@ -271,7 +271,7 @@ class PlayerTracker {
             addNodes.push(this.viewNodes[newIndex]);
         }
         for (; oldIndex < this.clientNodes.length; oldIndex++) {
-            var node = this.clientNodes[oldIndex];
+            const node = this.clientNodes[oldIndex];
             if (node.isRemoved)
                 eatNodes.push(node);
             else
@@ -285,7 +285,9 @@ class PlayerTracker {
             // 1 / 0.040 = 25 (once per second)
             this.tickLeaderboard = 0;
             if (this.server.leaderboardType >= 0)
-                packetHandler.sendPacket(new Packet.UpdateLeaderboard(this, this.server.leaderboard, this.server.leaderboardType));
+                packetHandler.sendPacket(
+                    new Packet.UpdateLeaderboard(this, this.server.leaderboard, this.server.leaderboardType)
+                );
         }
     }
     updateSpecView(len) {
@@ -299,19 +301,19 @@ class PlayerTracker {
         else {
             if (this.freeRoam || this.getSpecTarget() == null) {
                 // free roam
-                var mouseVec = this.mouse.difference(this.centerPos);
-                var mouseDist = mouseVec.dist();
+                const mouseVec = this.mouse.difference(this.centerPos);
+                const mouseDist = mouseVec.dist();
                 if (mouseDist != 0) {
                     this.setCenterPos(this.centerPos.add(mouseVec.product(32 / mouseDist)));
                 }
-                var scale = this.server.config.serverSpectatorScale;
+                const scale = this.server.config.serverSpectatorScale;
             }
             else {
                 // spectate target
-                var player = this.getSpecTarget();
+                const player = this.getSpecTarget();
                 if (player) {
                     this.setCenterPos(player.centerPos);
-                    var scale = player.getScale();
+                    const scale = player.getScale();
                     this.place = player.place;
                     this.viewBox = player.viewBox;
                     this.viewNodes = player.viewNodes;
