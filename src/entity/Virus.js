@@ -1,4 +1,4 @@
-var Cell = require('./Cell');
+const Cell = require('./Cell');
 
 class Virus extends Cell {
     constructor(server, owner, position, size) {
@@ -29,17 +29,19 @@ class Virus extends Cell {
     onEaten(cell) {
         if (!cell.owner)
             return;
-        var config = this.server.config;
-        var cellsLeft = (config.virusMaxCells || config.playerMaxCells) - cell.owner.cells.length;
+        const config = this.server.config;
+        const cellsLeft = (config.virusMaxCells || config.playerMaxCells) - cell.owner.cells.length;
         if (cellsLeft <= 0)
             return;
-        var splitMin = config.virusMaxPoppedSize * config.virusMaxPoppedSize / 100;
-        var cellMass = cell._mass, splits = [], splitCount, splitMass;
+        const splitMin = config.virusMaxPoppedSize * config.virusMaxPoppedSize / 100;
+        const cellMass = cell._mass, splits = [], splitCount, splitMass;
+        let splitMass = cellMass / 2;
+        let massLeft = cellMass / 2;
         if (config.virusEqualPopSize) {
             // definite monotone splits
             splitCount = Math.min(~~(cellMass / splitMin), cellsLeft);
             splitMass = cellMass / (1 + splitCount);
-            for (var i = 0; i < splitCount; i++)
+            for (let i = 0; i < splitCount; i++)
                 splits.push(splitMass);
             return this.explodeCell(cell, splits);
         }
@@ -55,8 +57,6 @@ class Virus extends Cell {
             return this.explodeCell(cell, splits);
         }
         // half-half splits
-        var splitMass = cellMass / 2;
-        var massLeft = cellMass / 2;
         while (cellsLeft-- > 0) {
             if (massLeft / cellsLeft < splitMin) {
                 splitMass = massLeft / cellsLeft;
@@ -71,14 +71,14 @@ class Virus extends Cell {
         this.explodeCell(cell, splits);
     }
     explodeCell(cell, splits) {
-        for (var i = 0; i < splits.length; i++)
+        for (let i = 0; i < splits.length; i++)
             this.server.splitPlayerCell(cell.owner, cell, 2 * Math.PI * Math.random(), splits[i]);
     }
     onAdd(server) {
         server.nodesVirus.push(this);
     }
     onRemove(server) {
-        var index = server.nodesVirus.indexOf(this);
+        const index = server.nodesVirus.indexOf(this);
         if (index != -1)
             server.nodesVirus.splice(index, 1);
         // Respawn
