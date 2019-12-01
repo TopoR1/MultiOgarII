@@ -30,13 +30,12 @@ class Virus extends Cell {
         if (!cell.owner)
             return;
         const config = this.server.config;
-        const cellsLeft = (config.virusMaxCells || config.playerMaxCells) - cell.owner.cells.length;
+        let cellsLeft = (config.virusMaxCells || config.playerMaxCells) - cell.owner.cells.length;
         if (cellsLeft <= 0)
             return;
         const splitMin = config.virusMaxPoppedSize * config.virusMaxPoppedSize / 100;
-        const cellMass = cell._mass, splits = [], splitCount, splitMass;
-        let splitMass = cellMass / 2;
-        let massLeft = cellMass / 2;
+        const cellMass = cell._mass;
+        let splits = [], splitCount, splitMass;
         if (config.virusEqualPopSize) {
             // definite monotone splits
             splitCount = Math.min(~~(cellMass / splitMin), cellsLeft);
@@ -57,6 +56,8 @@ class Virus extends Cell {
             return this.explodeCell(cell, splits);
         }
         // half-half splits
+        let splitMass = cellMass / 2;
+        let massLeft = cellMass / 2;
         while (cellsLeft-- > 0) {
             if (massLeft / cellsLeft < splitMin) {
                 splitMass = massLeft / cellsLeft;
@@ -88,10 +89,3 @@ class Virus extends Cell {
 
 module.exports = Virus;
 Virus.prototype = new Cell();
-
-
-
-
-
-
-
