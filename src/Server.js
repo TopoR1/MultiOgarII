@@ -1,11 +1,11 @@
 // Library imports
-var http = require('http');
+const http = require('http');
 
 // Project imports
-var Entity = require('./entity');
-var Vec2 = require('./modules/Vec2');
-var Logger = require('./modules/Logger');
-var {QuadNode, Quad} = require('./modules/QuadNode.js');
+const Entity = require('./entity');
+const Vec2 = require('./modules/Vec2');
+const Logger = require('./modules/Logger');
+let {QuadNode, Quad} = require('./modules/QuadNode.js');
 
 // Server implementation
 class Server {
@@ -30,7 +30,7 @@ class Server {
         this.movingNodes = []; // For move engine
         this.leaderboard = []; // For leaderboard
         this.leaderboardType = -1; // No type
-        var BotLoader = require('./ai/BotLoader');
+        const BotLoader = require('./ai/BotLoader');
         this.bots = new BotLoader(this);
 
         // Main loop tick
@@ -60,25 +60,29 @@ class Server {
         this.timerLoopBind = this.timerLoop.bind(this);
         this.mainLoopBind = this.mainLoop.bind(this);
         // Set up gamemode(s)
-        var Gamemode = require('./gamemodes');
+        const Gamemode = require('./gamemodes');
         this.mode = Gamemode.get(this.config.serverGamemode);
         this.mode.onServerInit(this);
         // Client Binding
-        var bind = this.config.clientBind + "";
+        const bind = `${this.config.clientBind}`;
         this.clientBind = bind.split(' - ');
         // Start the server
         this.httpServer = http.createServer();
-        var wsOptions = {
+        const wsOptions = {
             server: this.httpServer,
             perMessageDeflate: false,
             maxPayload: 4096
         };
-        Logger.info("WebSocket: " + this.config.serverWsModule);
+        Logger.info(`WebSocket: ${this.config.serverWsModule}`);
         this.WebSocket = require(this.config.serverWsModule);
         this.wsServer = new this.WebSocket.Server(wsOptions);
         this.wsServer.on('error', this.onServerSocketError.bind(this));
         this.wsServer.on('connection', this.onClientSocketOpen.bind(this));
-        this.httpServer.listen(this.config.serverPort, this.config.serverBind, this.onHttpServerOpen.bind(this));
+        this.httpServer.listen(
+            this.config.serverPort,
+            this.config.serverBind,
+            this.onHttpServerOpen.bind(this)
+        );
         // Start stats port (if needed)
         if (this.config.serverStatsPort > 0) {
             this.startStatsServer(this.config.serverStatsPort);
@@ -88,21 +92,21 @@ class Server {
         // Start Main Loop
         setTimeout(this.timerLoopBind, 1);
         // Done
-        Logger.info("Game server started, on port " + this.config.serverPort);
-        Logger.info("Current game mode is " + this.mode.name);
+        Logger.info(`Game server started, on port ${this.config.serverPort}`);
+        Logger.info(`Current game mode is ${this.mode.name}`);
         // Player bots (Experimental)
         if (this.config.serverBots) {
-            for (var i = 0; i < this.config.serverBots; i++)
+            for (let i = 0; i < this.config.serverBots; i++)
                 this.bots.addBot();
-            Logger.info("Added " + this.config.serverBots + " player bots");
+            Logger.info(`Added ${this.config.serverBots} player bots`);
         }
         this.spawnCells(this.config.virusAmount, this.config.foodAmount);
     }
     addNode(node) {
         // Add to quad-tree & node list
-        var x = node.position.x;
-        var y = node.position.y;
-        var s = node._size;
+        const x = node.position.x;
+        const y = node.position.y;
+        const s = node._size;
         node.quadItem = {
             cell: node,
             bound: new Quad(x - s, y - s, x + s, y + s)
@@ -113,11 +117,13 @@ class Server {
         node.onAdd(this);
     }
     onServerSocketError(error) {
-        Logger.error("WebSocket: " + error.code + " - " + error.message);
+        Logger.error(`WebSocket: ${error.code} - ${error.message}`);
         switch (error.code) {
             case "EADDRINUSE":
-                Logger.error("Server could not bind to port " + this.config.serverPort + "!");
-                Logger.error("Please close out of Skype or change 'serverPort' in the config to a different number.");
+                Logger.error(`Server could not bind to port ${this.config.serverPort}!`);
+                Logger.error(
+                    "Please close out of Skype or change 'serverPort' in the config to a different number."
+                );
                 break;
             case "EACCES":
                 Logger.error("Please make sure you are running MultiOgarII with root privileges.");
@@ -126,10 +132,10 @@ class Server {
         process.exit(1); // Exits the program
     }
     onClientSocketOpen(ws, req) {
-        var req = req || ws.upgradeReq;
-        var logip = ws._socket.remoteAddress + ":" + ws._socket.remotePort;
-        ws.on('error', function (err) {
-            Logger.writeError("[" + logip + "] " + err.stack);
+        const req = req || ws.upgradeReq;
+        const logip = `${ws._socket.remoteAddress}:${ws._socket.remotePort}`;
+        ws.on('error', err => {
+            Logger.writeError(`[${logip}] ${err.stack}`);
         });
         if (this.config.serverMaxConnections && this.socketCount >= this.config.serverMaxConnections) {
             ws.close(1000, "No slots");
@@ -140,9 +146,9 @@ class Server {
             return;
         }
         if (this.config.serverIpLimit) {
-            var ipConnections = 0;
-            for (var i = 0; i < this.clients.length; i++) {
-                var socket = this.clients[i];
+            let ipConnections = 0;
+            for (let i = 0; i < this.clients.length; i++) {
+                const socket = this.clients[i];
                 if (!socket.isConnected || socket.remoteAddress != ws._socket.remoteAddress)
                     continue;
                 ipConnections++;
@@ -160,15 +166,17 @@ class Server {
         ws.remoteAddress = ws._socket.remoteAddress;
         ws.remotePort = ws._socket.remotePort;
         ws.lastAliveTime = Date.now();
-        Logger.write("CONNECTED " + ws.remoteAddress + ":" + ws.remotePort + ", origin: \"" + req.headers.origin + "\"");
-        var PlayerTracker = require('./PlayerTracker');
+        Logger.write(
+            `CONNECTED ${ws.remoteAddress}:${ws.remotePort}, origin: "${req.headers.origin}"`
+        );
+        const PlayerTracker = require('./PlayerTracker');
         ws.playerTracker = new PlayerTracker(this, ws);
-        var PacketHandler = require('./PacketHandler');
+        const PacketHandler = require('./PacketHandler');
         ws.packetHandler = new PacketHandler(this, ws);
-        var PlayerCommand = require('./modules/PlayerCommand');
+        const PlayerCommand = require('./modules/PlayerCommand');
         ws.playerCommand = new PlayerCommand(this, ws.playerTracker);
-        var self = this;
-        ws.on('message', function (message) {
+        const self = this;
+        ws.on('message', message => {
             if (self.config.serverWsModule === "uws")
                 // uws gives ArrayBuffer - convert it to Buffer
                 message = parseInt(process.version[1]) < 6 ? Buffer.from(message) : Buffer.from(message);
@@ -180,23 +188,24 @@ class Server {
             }
             ws.packetHandler.handleMessage(message);
         });
-        ws.on('error', function (error) {
-            ws.packetHandler.sendPacket = function (data) { };
+        ws.on('error', error => {
+            ws.packetHandler.sendPacket = function(data) { };
         });
-        ws.on('close', function (reason) {
+        ws.on('close', reason => {
             if (ws._socket && ws._socket.destroy != null && typeof ws._socket.destroy == 'function') {
                 ws._socket.destroy();
             }
             self.socketCount--;
             ws.isConnected = false;
-            ws.packetHandler.sendPacket = function (data) { };
+            ws.packetHandler.sendPacket = function(data) { };
             ws.closeReason = {
                 reason: ws._closeCode,
                 message: ws._closeMessage
             };
             ws.closeTime = Date.now();
-            Logger.write("DISCONNECTED " + ws.remoteAddress + ":" + ws.remotePort + ", code: " + ws._closeCode +
-                ", reason: \"" + ws._closeMessage + "\", name: \"" + ws.playerTracker._name + "\"");
+            Logger.write(
+                `DISCONNECTED ${ws.remoteAddress}:${ws.remotePort}, code: ${ws._closeCode}, reason: "${ws._closeMessage}", name: "${ws.playerTracker._name}"`
+            );
         });
         this.socketCount++;
         this.clients.push(ws);
@@ -214,8 +223,8 @@ class Server {
             if ((ws.lastAliveTime - this.startTime) / 1000 >= this.config.serverMinionIgnoreTime) {
                 if (this.minionTest.length >= this.config.serverMinionThreshold) {
                     ws.playerTracker.isMinion = true;
-                    for (var i = 0; i < this.minionTest.length; i++) {
-                        var playerTracker = this.minionTest[i];
+                    for (let i = 0; i < this.minionTest.length; i++) {
+                        const playerTracker = this.minionTest[i];
                         if (!playerTracker.socket.isConnected)
                             continue;
                         playerTracker.isMinion = true;
@@ -228,7 +237,7 @@ class Server {
         }
         // Add server minions if needed
         if (this.config.serverMinions && !ws.playerTracker.isMinion) {
-            for (var i = 0; i < this.config.serverMinions; i++) {
+            for (let i = 0; i < this.config.serverMinions; i++) {
                 this.bots.addMinion(ws.playerTracker);
             }
         }
@@ -240,32 +249,32 @@ class Server {
         if (this.ipBanList.indexOf(ipAddress) >= 0) {
             return true;
         }
-        var ipBin = ipAddress.split('.');
+        const ipBin = ipAddress.split('.');
         if (ipBin.length != 4) {
             // unknown IP format
             return false;
         }
-        var subNet2 = ipBin[0] + "." + ipBin[1] + ".*.*";
+        const subNet2 = `${ipBin[0]}.${ipBin[1]}.*.*`;
         if (this.ipBanList.indexOf(subNet2) >= 0) {
             return true;
         }
-        var subNet1 = ipBin[0] + "." + ipBin[1] + "." + ipBin[2] + ".*";
+        const subNet1 = `${ipBin[0]}.${ipBin[1]}.${ipBin[2]}.*`;
         if (this.ipBanList.indexOf(subNet1) >= 0) {
             return true;
         }
         return false;
     }
     setBorder(width, height) {
-        var hw = width / 2;
-        var hh = height / 2;
+        const hw = width / 2;
+        const hh = height / 2;
         this.border = new Quad(-hw, -hh, hw, hh);
         this.border.width = width;
         this.border.height = height;
     }
     getRandomColor() {
         // get random
-        var colorRGB = [0xFF, 0x07, (Math.random() * 256) >> 0];
-        colorRGB.sort(function () {
+        const colorRGB = [0xFF, 0x07, (Math.random() * 256) >> 0];
+        colorRGB.sort(() => {
             return 0.5 - Math.random();
         });
         // return random
@@ -281,7 +290,7 @@ class Server {
         this.quadTree.remove(node.quadItem);
         node.quadItem = null;
         // Remove from node lists
-        var i = this.nodes.indexOf(node);
+        let i = this.nodes.indexOf(node);
         if (i > -1)
             this.nodes.splice(i, 1);
         i = this.movingNodes.indexOf(node);
@@ -292,8 +301,8 @@ class Server {
     }
     updateClients() {
         // check dead clients
-        var len = this.clients.length;
-        for (var i = 0; i < len;) {
+        const len = this.clients.length;
+        for (let i = 0; i < len;) {
             if (!this.clients[i]) {
                 i++;
                 continue;
@@ -306,23 +315,23 @@ class Server {
                 i++;
         }
         // update
-        for (var i = 0; i < len; i++) {
+        for (let i = 0; i < len; i++) {
             if (!this.clients[i])
                 continue;
             this.clients[i].playerTracker.updateTick();
         }
-        for (var i = 0; i < len; i++) {
+        for (let i = 0; i < len; i++) {
             if (!this.clients[i])
                 continue;
             this.clients[i].playerTracker.sendUpdate();
         }
         // check minions
-        for (var i = 0, test = this.minionTest.length; i < test;) {
+        for (let i = 0, test = this.minionTest.length; i < test;) {
             if (!this.minionTest[i]) {
                 i++;
                 continue;
             }
-            var date = new Date() - this.minionTest[i].connectedTime;
+            const date = new Date() - this.minionTest[i].connectedTime;
             if (date > this.config.serverMinionInterval)
                 this.minionTest.splice(i, 1);
             else
@@ -336,9 +345,9 @@ class Server {
         this.mode.updateLB(this, this.leaderboard);
         if (!this.mode.specByLeaderboard) {
             // Get client with largest score if gamemode doesn't have a leaderboard
-            var clients = this.clients.valueOf();
+            const clients = this.clients.valueOf();
             // Use sort function
-            clients.sort(function (a, b) {
+            clients.sort((a, b) => {
                 return b.playerTracker._score - a.playerTracker._score;
             });
             this.largestClient = null;
@@ -365,7 +374,7 @@ class Server {
             message = message.slice(0, 64);
         }
         if (this.config.serverChatAscii) {
-            for (var i = 0; i < message.length; i++) {
+            for (let i = 0; i < message.length; i++) {
                 if ((message.charCodeAt(i) < 0x20 || message.charCodeAt(i) > 0x7F) && from) {
                     this.sendChatMessage(null, from, "Message failed - You can use ASCII text only!");
                     return;
@@ -373,7 +382,11 @@ class Server {
             }
         }
         if (this.checkBadWord(message) && from && this.config.badWordFilter === 1) {
-            this.sendChatMessage(null, from, "Message failed - Stop insulting others! Keep calm and be friendly please.");
+            this.sendChatMessage(
+                null,
+                from,
+                "Message failed - Stop insulting others! Keep calm and be friendly please."
+            );
             return;
         }
         this.sendChatMessage(from, to, message);
@@ -381,8 +394,8 @@ class Server {
     checkBadWord(value) {
         if (!value)
             return false;
-        value = " " + value.toLowerCase().trim() + " ";
-        for (var i = 0; i < this.badWords.length; i++) {
+        value = ` ${value.toLowerCase().trim()} `;
+        for (let i = 0; i < this.badWords.length; i++) {
             if (value.indexOf(this.badWords[i]) >= 0) {
                 return true;
             }
@@ -390,11 +403,11 @@ class Server {
         return false;
     }
     sendChatMessage(from, to, message) {
-        for (var i = 0, len = this.clients.length; i < len; i++) {
+        for (let i = 0, len = this.clients.length; i < len; i++) {
             if (!this.clients[i])
                 continue;
             if (!to || to == this.clients[i].playerTracker) {
-                var Packet = require('./packet');
+                const Packet = require('./packet');
                 if (this.config.separateChatForTeams && this.mode.haveTeams) {
                     //  from equals null if message from server
                     if (from == null || from.team === this.clients[i].playerTracker.team) {
@@ -408,9 +421,9 @@ class Server {
         }
     }
     timerLoop() {
-        var timeStep = 40; // vanilla: 40
-        var ts = Date.now();
-        var dt = ts - this.timeStamp;
+        const timeStep = 40; // vanilla: 40
+        const ts = Date.now();
+        const dt = ts - this.timeStamp;
         if (dt < timeStep - 5) {
             setTimeout(this.timerLoopBind, timeStep - 5);
             return;
@@ -425,8 +438,8 @@ class Server {
     }
     mainLoop() {
         this.stepDateTime = Date.now();
-        var tStart = process.hrtime();
-        var self = this;
+        const tStart = process.hrtime();
+        const self = this;
         // Restart
         if (this.ticks > this.config.serverRestart) {
             this.httpServer = null;
@@ -434,8 +447,8 @@ class Server {
             this.run = true;
             this.lastNodeId = 1;
             this.lastPlayerId = 1;
-            for (var i = 0; i < this.clients.length; i++) {
-                var client = this.clients[i];
+            for (let i = 0; i < this.clients.length; i++) {
+                const client = this.clients[i];
                 client.close();
             }
             ;
@@ -446,9 +459,9 @@ class Server {
             this.nodesPlayer = [];
             this.movingNodes = [];
             if (this.config.serverBots) {
-                for (var i = 0; i < this.config.serverBots; i++)
+                for (let i = 0; i < this.config.serverBots; i++)
                     this.bots.addBot();
-                Logger.info("Added " + this.config.serverBots + " player bots");
+                Logger.info(`Added ${this.config.serverBots} player bots`);
             }
             ;
             this.commands;
@@ -466,8 +479,8 @@ class Server {
                     return;
                 // Scan and check for ejected mass / virus collisions
                 this.boostCell(cell);
-                this.quadTree.find(cell.quadItem.bound, function (check) {
-                    var m = self.checkCellCollision(cell, check);
+                this.quadTree.find(cell.quadItem.bound, check => {
+                    const m = self.checkCellCollision(cell, check);
                     if (cell.type == 3 && check.type == 3 && !self.config.mobilePhysics)
                         self.resolveRigidCollision(m);
                     else
@@ -477,13 +490,13 @@ class Server {
                     this.movingNodes = null;
             });
             // Update players and scan for collisions
-            var eatCollisions = [];
+            const eatCollisions = [];
             this.nodesPlayer.forEach((cell) => {
                 if (cell.isRemoved)
                     return;
                 // Scan for eat/rigid collisions and resolve them
-                this.quadTree.find(cell.quadItem.bound, function (check) {
-                    var m = self.checkCellCollision(cell, check);
+                this.quadTree.find(cell.quadItem.bound, check => {
+                    const m = self.checkCellCollision(cell, check);
                     if (self.checkRigidCollision(m))
                         self.resolveRigidCollision(m);
                     else if (check != cell)
@@ -517,7 +530,7 @@ class Server {
         if (this.config.serverTracker && (this.ticks % 750) === 0)
             this.pingServerTracker(); // once per 30 seconds
         // update-update time
-        var tEnd = process.hrtime(tStart);
+        const tEnd = process.hrtime(tStart);
         this.updateTime = tEnd[0] * 1e3 + tEnd[1] / 1e6;
     }
     // update remerge first
@@ -525,13 +538,13 @@ class Server {
         if (client.socket.isConnected == false || client.frozen || !client.mouse)
             return; // Do not move
         // get movement from vector
-        var d = client.mouse.difference(cell.position);
-        var move = cell.getSpeed(d.dist()); // movement speed
+        const d = client.mouse.difference(cell.position);
+        const move = cell.getSpeed(d.dist()); // movement speed
         if (!move)
             return; // avoid jittering
         cell.position.add(d.product(move));
         // update remerge
-        var time = this.config.playerRecombineTime, base = Math.max(time, cell._size * 0.2) * 25;
+        const time = this.config.playerRecombineTime, base = Math.max(time, cell._size * 0.2) * 25;
         // instant merging conditions
         if (!time || client.rec || client.mergeOverride) {
             cell._canRemerge = cell.boostDistance < 100;
@@ -542,13 +555,13 @@ class Server {
     }
     // decay player cells
     updateSizeDecay(cell) {
-        var rate = this.config.playerDecayRate, cap = this.config.playerDecayCap;
+        let rate = this.config.playerDecayRate, cap = this.config.playerDecayCap;
         if (!rate || cell._size <= this.config.playerMinSize)
             return;
         // remove size from cell at decay rate
         if (cap && cell._mass > cap)
             rate *= 10;
-        var decay = 1 - rate * this.mode.decayMod;
+        const decay = 1 - rate * this.mode.decayMod;
         cell.setSize(Math.sqrt(cell.radius * decay));
     }
     boostCell(cell) {
@@ -558,7 +571,7 @@ class Server {
             return;
         }
         // decay boost-speed from distance
-        var speed = cell.boostDistance / 9; // val: 87
+        const speed = cell.boostDistance / 9; // val: 87
         cell.boostDistance -= speed; // decays from speed
         cell.position.add(cell.boostDirection.product(speed));
         // update boundries
@@ -568,7 +581,7 @@ class Server {
     autoSplit(cell, client) {
         // get size limit based off of rec mode
         if (client.rec)
-            var maxSize = 1e9; // increase limit for rec (1 bil)
+            let maxSize = 1e9; // increase limit for rec (1 bil)
         else
             maxSize = this.config.playerMaxSize;
         // check size limit
@@ -580,13 +593,13 @@ class Server {
         }
         else {
             // split in random direction
-            var angle = Math.random() * 2 * Math.PI;
+            const angle = Math.random() * 2 * Math.PI;
             this.splitPlayerCell(client, cell, angle, cell._mass * .5);
         }
     }
     updateNodeQuad(node) {
         // update quad tree
-        var item = node.quadItem.bound;
+        const item = node.quadItem.bound;
         item.minx = node.position.x - node._size;
         item.miny = node.position.y - node._size;
         item.maxx = node.position.x + node._size;
@@ -596,7 +609,7 @@ class Server {
     }
     // Checks cells for collision
     checkCellCollision(cell, check) {
-        var p = check.position.difference(cell.position);
+        const p = check.position.difference(cell.position);
         // create collision manifold
         return {
             cell: cell,
@@ -620,7 +633,7 @@ class Server {
                     m.cell.owner.team == m.check.owner.team;
             }
         }
-        var r = this.config.mobilePhysics ? 1 : 13;
+        const r = this.config.mobilePhysics ? 1 : 13;
         if (m.cell.getAge() < r || m.check.getAge() < r) {
             return false; // just splited => ignore
         }
@@ -628,21 +641,21 @@ class Server {
     }
     // Resolves rigid body collisions
     resolveRigidCollision(m) {
-        var push = (m.cell._size + m.check._size - m.d) / m.d;
+        const push = (m.cell._size + m.check._size - m.d) / m.d;
         if (push <= 0 || m.d == 0)
             return; // do not extrude
         // body impulse
-        var rt = m.cell.radius + m.check.radius;
-        var r1 = push * m.cell.radius / rt;
-        var r2 = push * m.check.radius / rt;
+        const rt = m.cell.radius + m.check.radius;
+        const r1 = push * m.cell.radius / rt;
+        const r2 = push * m.check.radius / rt;
         // apply extrusion force
         m.cell.position.subtract(m.p.product(r2));
         m.check.position.add(m.p.product(r1));
     }
     // Resolves non-rigid body collision
     resolveCollision(m) {
-        var cell = m.cell;
-        var check = m.check;
+        let cell = m.cell;
+        let check = m.check;
         if (cell._size > check._size) {
             cell = m.check;
             check = m.cell;
@@ -670,15 +683,15 @@ class Server {
         this.removeNode(cell);
     }
     splitPlayerCell(client, parent, angle, mass) {
-        var size = Math.sqrt(mass * 100);
-        var size1 = Math.sqrt(parent.radius - size * size);
+        const size = Math.sqrt(mass * 100);
+        const size1 = Math.sqrt(parent.radius - size * size);
         // Too small to split
         if (!size1 || size1 < this.config.playerMinSize)
             return;
         // Remove size from parent cell
         parent.setSize(size1);
         // Create cell and add it to node list
-        var newCell = new Entity.PlayerCell(this, client, parent.position, size);
+        const newCell = new Entity.PlayerCell(this, client, parent.position, size);
         newCell.setBoost(this.config.splitVelocity * Math.pow(size, 0.0122), angle);
         this.addNode(newCell);
     }
@@ -687,24 +700,24 @@ class Server {
             this.border.miny + this.border.height * Math.random());
     }
     spawnFood() {
-        var cell = new Entity.Food(this, null, this.randomPos(), this.config.foodMinSize);
+        const cell = new Entity.Food(this, null, this.randomPos(), this.config.foodMinSize);
         if (this.config.foodMassGrow) {
-            var maxGrow = this.config.foodMaxSize - cell._size;
+            const maxGrow = this.config.foodMaxSize - cell._size;
             cell.setSize(cell._size += maxGrow * Math.random());
         }
         cell.color = this.getRandomColor();
         this.addNode(cell);
     }
     spawnVirus() {
-        var virus = new Entity.Virus(this, null, this.randomPos(), this.config.virusMinSize);
+        const virus = new Entity.Virus(this, null, this.randomPos(), this.config.virusMinSize);
         if (!this.willCollide(virus))
             this.addNode(virus);
     }
     spawnCells(virusCount, foodCount) {
-        for (var i = 0; i < foodCount; i++) {
+        for (let i = 0; i < foodCount; i++) {
             this.spawnFood();
         }
-        for (var ii = 0; ii < virusCount; ii++) {
+        for (let ii = 0; ii < virusCount; ii++) {
             this.spawnVirus();
         }
     }
@@ -712,12 +725,12 @@ class Server {
         if (this.disableSpawn)
             return; // Not allowed to spawn!
         // Check for special starting size
-        var size = this.config.playerStartSize;
+        let size = this.config.playerStartSize;
         if (player.spawnmass)
             size = player.spawnmass;
         // Check if can spawn from ejected mass
-        var index = ~~(this.nodesEjected.length * Math.random());
-        var eject = this.nodesEjected[index]; // Randomly selected
+        const index = ~~(this.nodesEjected.length * Math.random());
+        const eject = this.nodesEjected[index]; // Randomly selected
         if (Math.random() <= this.config.ejectSpawnPercent &&
             eject && eject.boostDistance < 1) {
             // Spawn from ejected mass
@@ -726,7 +739,7 @@ class Server {
             size = Math.max(size, eject._size * 1.15);
         }
         // Spawn player safely (do not check minions)
-        var cell = new Entity.PlayerCell(this, player, pos, size);
+        const cell = new Entity.PlayerCell(this, player, pos, size);
         if (this.willCollide(cell) && !player.isMi)
             pos = this.randomPos(); // Not safe => retry
         this.addNode(cell);
@@ -734,20 +747,20 @@ class Server {
         player.mouse.assign(pos);
     }
     willCollide(cell) {
-        const x = cell.position.x;
-        const y = cell.position.y;
+        let x = cell.position.x;
+        let y = cell.position.y;
         const r = cell._size;
         const bound = new Quad(x - r, y - r, x + r, y + r);
         return this.quadTree.find(bound, n => n.type == 0);
     }
     splitCells(client) {
         // Split cell order decided by cell age
-        var cellToSplit = [];
-        for (var i = 0; i < client.cells.length; i++)
+        const cellToSplit = [];
+        for (let i = 0; i < client.cells.length; i++)
             cellToSplit.push(client.cells[i]);
         // Split split-able cells
         cellToSplit.forEach((cell) => {
-            var d = client.mouse.difference(cell.position);
+            const d = client.mouse.difference(cell.position);
             if (d.distSquared() < 1) {
                 d.x = 1, d.y = 0;
             }
@@ -755,7 +768,7 @@ class Server {
                 return; // cannot split
             // Get maximum cells for rec mode
             if (client.rec)
-                var max = 200; // rec limit
+                let max = 200; // rec limit
             else
                 max = this.config.playerMaxCells;
             if (client.cells.length >= max)
@@ -770,7 +783,7 @@ class Server {
             client.lastEject = this.ticks;
             return true;
         }
-        var dt = this.ticks - client.lastEject;
+        const dt = this.ticks - client.lastEject;
         if (dt < this.config.ejectCooldown) {
             // reject (cooldown)
             return false;
@@ -781,26 +794,26 @@ class Server {
     ejectMass(client) {
         if (!this.canEjectMass(client) || client.frozen)
             return;
-        for (var i = 0; i < client.cells.length; i++) {
-            var cell = client.cells[i];
+        for (let i = 0; i < client.cells.length; i++) {
+            const cell = client.cells[i];
             if (cell._size < this.config.playerMinEjectSize) continue;
-            var loss = this.config.ejectSizeLoss;
-            var newSize = cell.radius - loss * loss;
-            var minSize = this.config.playerMinSize;
+            const loss = this.config.ejectSizeLoss;
+            const newSize = cell.radius - loss * loss;
+            const minSize = this.config.playerMinSize;
             if (newSize < 0 || newSize < minSize * minSize)
                 continue; // Too small to eject
             cell.setSize(Math.sqrt(newSize));
 
-            var d = client.mouse.difference(cell.position);
-            var sq = d.dist();
+            const d = client.mouse.difference(cell.position);
+            const sq = d.dist();
             d.x = sq > 1 ? d.x / sq : 1;
             d.y = sq > 1 ? d.y / sq : 0;
 
             // Get starting position
-            var pos = cell.position.sum(d.product(cell._size));
-            var angle = d.angle() + (Math.random() * .6) - .3;
+            const pos = cell.position.sum(d.product(cell._size));
+            const angle = d.angle() + (Math.random() * .6) - .3;
             // Create cell and add it to node list
-            var ejected;
+            let ejected;
             if (this.config.ejectVirus) {
                 ejected = new Entity.Virus(this, null, pos, this.config.ejectSize);
             } else {
@@ -813,8 +826,8 @@ class Server {
     }
     shootVirus(parent, angle) {
         // Create virus and add it to node list
-        var pos = parent.position.clone();
-        var newVirus = new Entity.Virus(this, null, pos, this.config.virusMinSize);
+        const pos = parent.position.clone();
+        const newVirus = new Entity.Virus(this, null, pos, this.config.virusMinSize);
         newVirus.setBoost(this.config.virusVelocity, angle);
         this.addNode(newVirus);
     }
@@ -823,41 +836,41 @@ class Server {
         //Logger.setVerbosity(this.config.logVerbosity);
         //Logger.setFileVerbosity(this.config.logFileVerbosity);
         // Load bad words
-        var fileNameBadWords = this.srcFiles + '/badwords.txt';
+        const fileNameBadWords = `${this.srcFiles}/badwords.txt`;
         try {
             if (!fs.existsSync(fileNameBadWords)) {
-                Logger.warn(fileNameBadWords + " not found");
+                Logger.warn(`${fileNameBadWords} not found`);
             }
             else {
-                var words = fs.readFileSync(fileNameBadWords, 'utf-8');
+                let words = fs.readFileSync(fileNameBadWords, 'utf-8');
                 words = words.split(/[\r\n]+/);
-                words = words.map(function (arg) {
-                    return " " + arg.trim().toLowerCase() + " "; // Formatting
+                words = words.map(arg => {
+                    return ` ${arg.trim().toLowerCase()} `; // Formatting
                 });
-                words = words.filter(function (arg) {
+                words = words.filter(arg => {
                     return arg.length > 2;
                 });
                 this.badWords = words;
-                Logger.info(this.badWords.length + " bad words loaded");
+                Logger.info(`${this.badWords.length} bad words loaded`);
             }
         }
         catch (err) {
             Logger.error(err.stack);
-            Logger.error("Failed to load " + fileNameBadWords + ": " + err.message);
+            Logger.error(`Failed to load ${fileNameBadWords}: ${err.message}`);
         }
         // Load user list
-        var UserRoleEnum = require(this.srcFiles + '/enum/UserRoleEnum');
-        var fileNameUsers = this.srcFiles + '/enum/userRoles.json';
+        const UserRoleEnum = require(`${this.srcFiles}/enum/UserRoleEnum`);
+        const fileNameUsers = `${this.srcFiles}/enum/userRoles.json`;
         try {
             this.userList = [];
             if (!fs.existsSync(fileNameUsers)) {
-                Logger.warn(fileNameUsers + " is missing.");
+                Logger.warn(`${fileNameUsers} is missing.`);
                 return;
             }
-            var usersJson = fs.readFileSync(fileNameUsers, 'utf-8');
-            var list = JSON.parse(usersJson.trim());
-            for (var i = 0; i < list.length;) {
-                var item = list[i];
+            const usersJson = fs.readFileSync(fileNameUsers, 'utf-8');
+            const list = JSON.parse(usersJson.trim());
+            for (let i = 0; i < list.length;) {
+                const item = list[i];
                 if (!item.hasOwnProperty("ip") ||
                     !item.hasOwnProperty("password") ||
                     !item.hasOwnProperty("role") ||
@@ -866,7 +879,7 @@ class Server {
                     continue;
                 }
                 if (!item.password || !item.password.trim()) {
-                    Logger.warn("User account \"" + item.name + "\" disabled");
+                    Logger.warn(`User account "${item.name}" disabled`);
                     list.splice(i, 1);
                     continue;
                 }
@@ -874,7 +887,7 @@ class Server {
                     item.ip = item.ip.trim();
                 item.password = item.password.trim();
                 if (!UserRoleEnum.hasOwnProperty(item.role)) {
-                    Logger.warn("Unknown user role: " + item.role);
+                    Logger.warn(`Unknown user role: ${item.role}`);
                     item.role = UserRoleEnum.USER;
                 }
                 else {
@@ -884,29 +897,29 @@ class Server {
                 i++;
             }
             this.userList = list;
-            Logger.info(this.userList.length + " user records loaded.");
+            Logger.info(`${this.userList.length} user records loaded.`);
         }
         catch (err) {
             Logger.error(err.stack);
-            Logger.error("Failed to load " + fileNameUsers + ": " + err.message);
+            Logger.error(`Failed to load ${fileNameUsers}: ${err.message}`);
         }
         // Load ip ban list
-        var fileNameIpBan = this.srcFiles + '/ipbanlist.txt';
+        const fileNameIpBan = `${this.srcFiles}/ipbanlist.txt`;
         try {
             if (fs.existsSync(fileNameIpBan)) {
                 // Load and input the contents of the ipbanlist file
-                this.ipBanList = fs.readFileSync(fileNameIpBan, "utf8").split(/[\r\n]+/).filter(function (x) {
+                this.ipBanList = fs.readFileSync(fileNameIpBan, "utf8").split(/[\r\n]+/).filter(x => {
                     return x != ''; // filter empty lines
                 });
-                Logger.info(this.ipBanList.length + " IP ban records loaded.");
+                Logger.info(`${this.ipBanList.length} IP ban records loaded.`);
             }
             else {
-                Logger.warn(fileNameIpBan + " is missing.");
+                Logger.warn(`${fileNameIpBan} is missing.`);
             }
         }
         catch (err) {
             Logger.error(err.stack);
-            Logger.error("Failed to load " + fileNameIpBan + ": " + err.message);
+            Logger.error(`Failed to load ${fileNameIpBan}: ${err.message}`);
         }
         // Convert config settings
         this.config.serverRestart = this.config.serverRestart === 0 ? 1e999 : this.config.serverRestart * 1500;
@@ -916,28 +929,28 @@ class Server {
         this.stats = "Test";
         this.getStats();
         // Show stats
-        this.httpServer = http.createServer(function (req, res) {
+        this.httpServer = http.createServer(function(req, res) {
             res.setHeader('Access-Control-Allow-Origin', '*');
             res.writeHead(200);
             res.end(this.stats);
         }.bind(this));
-        this.httpServer.on('error', function (err) {
-            Logger.error("Failed to start stats server: " + err.message);
+        this.httpServer.on('error', err => {
+            Logger.error(`Failed to start stats server: ${err.message}`);
         });
-        var getStatsBind = this.getStats.bind(this);
-        this.httpServer.listen(port, function () {
+        const getStatsBind = this.getStats.bind(this);
+        this.httpServer.listen(port, function() {
             // Stats server
-            Logger.info("Started stats server on port " + port);
+            Logger.info(`Started stats server on port ${port}`);
             setInterval(getStatsBind, this.config.serverStatsUpdate * 1000);
         }.bind(this));
     }
     getStats() {
         // Get server statistics
-        var totalPlayers = 0;
-        var alivePlayers = 0;
-        var spectatePlayers = 0;
-        for (var i = 0, len = this.clients.length; i < len; i++) {
-            var socket = this.clients[i];
+        let totalPlayers = 0;
+        let alivePlayers = 0;
+        let spectatePlayers = 0;
+        for (let i = 0, len = this.clients.length; i < len; i++) {
+            const socket = this.clients[i];
             if (!socket || !socket.isConnected || socket.playerTracker.isMi)
                 continue;
             totalPlayers++;
@@ -946,7 +959,7 @@ class Server {
             else
                 spectatePlayers++;
         }
-        var s = {
+        const s = {
             'server_name': this.config.serverName,
             'server_chat': this.config.serverChat ? "true" : "false",
             'border_width': this.border.width,
@@ -966,13 +979,13 @@ class Server {
     // To list us on the server tracker located at http://ogar.mivabe.nl/master
     pingServerTracker() {
         // Get server statistics
-        var os = require('os');
-        var totalPlayers = 0;
-        var alivePlayers = 0;
-        var spectatePlayers = 0;
-        var robotPlayers = 0;
-        for (var i = 0, len = this.clients.length; i < len; i++) {
-            var socket = this.clients[i];
+        const os = require('os');
+        let totalPlayers = 0;
+        let alivePlayers = 0;
+        let spectatePlayers = 0;
+        let robotPlayers = 0;
+        for (let i = 0, len = this.clients.length; i < len; i++) {
+            const socket = this.clients[i];
             if (!socket || socket.isConnected == false)
                 continue;
             if (socket.isConnected == null) {
@@ -987,18 +1000,7 @@ class Server {
             }
         }
         // ogar.mivabe.nl/master
-        var data = 'current_players=' + totalPlayers +
-            '&alive=' + alivePlayers +
-            '&spectators=' + spectatePlayers +
-            '&max_players=' + this.config.serverMaxConnections +
-            '&sport=' + this.config.serverPort +
-            '&gamemode=[**] ' + this.mode.name + // we add [**] to indicate that this is MultiOgarII server
-            '&agario=true' + // protocol version
-            '&name=Unnamed Server' + // we cannot use it, because other value will be used as dns name
-            '&opp=' + os.platform() + ' ' + os.arch() + // "win32 x64"
-            '&uptime=' + process.uptime() + // Number of seconds server has been running
-            '&version=MultiOgarII ' + this.version +
-            '&start_time=' + this.startTime;
+        const data = `current_players=${totalPlayers}&alive=${alivePlayers}&spectators=${spectatePlayers}&max_players=${this.config.serverMaxConnections}&sport=${this.config.serverPort}&gamemode=[**] ${this.mode.name}&agario=true&name=Unnamed Server&opp=${os.platform()} ${os.arch()}&uptime=${process.uptime()}&version=MultiOgarII ${this.version}&start_time=${this.startTime}`;
         trackerRequest({
             host: 'ogar.mivabe.nl',
             port: 80,
@@ -1010,24 +1012,25 @@ class Server {
 
 function trackerRequest(options, type, body) {
     if (options.headers == null) options.headers = {};
-    options.headers['user-agent'] = 'MultiOgarII' + this.version;
+    options.headers['user-agent'] = `MultiOgarII${this.version}`;
     options.headers['content-type'] = type;
     options.headers['content-length'] = body == null ? 0 : Buffer.byteLength(body, 'utf8');
-    var req = http.request(options, function (res) {
+    const req = http.request(options, res => {
         if (res.statusCode != 200) {
-            Logger.writeError("[Tracker][" + options.host + "]: statusCode = " + res.statusCode);
+            Logger.writeError(`[Tracker][${options.host}]: statusCode = ${res.statusCode}`);
             return;
         }
         res.setEncoding('utf8');
     });
-    req.on('error', function (err) {
-        Logger.writeError("[Tracker][" + options.host + "]: " + err);
+    req.on('error', err => {
+        Logger.writeError(`[Tracker][${options.host}]: ${err}`);
     });
     req.shouldKeepAlive = false;
-    req.on('close', function () {
+    req.on('close', () => {
         req.destroy();
     });
     req.write(body);
     req.end();
 }
+
 module.exports = Server;
