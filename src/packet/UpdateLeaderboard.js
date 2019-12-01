@@ -1,5 +1,5 @@
 // Import
-var BinaryWriter = require("./BinaryWriter");
+const BinaryWriter = require("./BinaryWriter");
 
 function writeCount(writer, flag1, flag2) {
     writer.writeUInt8(flag1); // Packet ID
@@ -38,10 +38,10 @@ class UpdateLeaderboard {
     }
     // User text all other protocols
     buildUserText(protocol) {
-        var writer = new BinaryWriter();
+        const writer = new BinaryWriter();
         writeCount(writer, 0x31, this.leaderboard.length);
-        for (var i = 0; i < this.leaderboard.length; i++) {
-            var item = this.leaderboard[i] || "";
+        for (let i = 0; i < this.leaderboard.length; i++) {
+            const item = this.leaderboard[i] || "";
             if (protocol < 11)
                 writer.writeUInt32(0);
             if (protocol < 6)
@@ -53,10 +53,10 @@ class UpdateLeaderboard {
     }
     // User text 14
     buildUserText14() {
-        var writer = new BinaryWriter();
+        const writer = new BinaryWriter();
         writer.writeUInt8(0x35);
-        for (var i = 0; i < this.leaderboard.length; i++) {
-            var item = this.leaderboard[i] || "";
+        for (let i = 0; i < this.leaderboard.length; i++) {
+            const item = this.leaderboard[i] || "";
             writer.writeUInt8(0x02);
             writer.writeStringZeroUtf8(item);
         }
@@ -64,14 +64,14 @@ class UpdateLeaderboard {
     }
     // FFA protocol 5
     buildFfa5() {
-        var writer = new BinaryWriter();
+        const writer = new BinaryWriter();
         writeCount(writer, 0x31, this.leaderboardCount);
-        for (var i = 0; i < this.leaderboardCount; i++) {
-            var item = this.leaderboard[i];
+        for (let i = 0; i < this.leaderboardCount; i++) {
+            const item = this.leaderboard[i];
             if (item == null)
                 return null; // bad leaderboardm just don't send it
-            var name = item._nameUnicode;
-            var id = 0;
+            const name = item._nameUnicode;
+            let id = 0;
             if (item == this.playerTracker && item.cells.length)
                 id = item.cells[0].nodeId ^ this.playerTracker.scrambleId;
             writer.writeUInt32(id >>> 0); // Player cell Id
@@ -84,14 +84,14 @@ class UpdateLeaderboard {
     }
     // FFA protocol 6
     buildFfa6() {
-        var writer = new BinaryWriter();
+        const writer = new BinaryWriter();
         writeCount(writer, 0x31, this.leaderboardCount);
-        for (var i = 0; i < this.leaderboardCount; i++) {
-            var item = this.leaderboard[i];
+        for (let i = 0; i < this.leaderboardCount; i++) {
+            const item = this.leaderboard[i];
             if (item == null)
                 return null; // bad leaderboard just don't send it
-            var name = item._nameUtf8;
-            var id = item == this.playerTracker ? 1 : 0;
+            const name = item._nameUtf8;
+            const id = item == this.playerTracker ? 1 : 0;
             writer.writeUInt32(id >>> 0); // isMe flag
             if (name)
                 writer.writeBytes(name);
@@ -119,13 +119,13 @@ class UpdateLeaderboard {
     */
     // FFA protocol 13/14
     buildFfa(protocol) {
-        var writer = new BinaryWriter();
+        const writer = new BinaryWriter();
         if (protocol < 14)
             writer.writeUInt8(0x33); // 13
         else
             writer.writeUInt8(0x35); // 14
-        for (var i = 0; i < this.leaderboardCount; i++) {
-            var item = this.leaderboard[i];
+        for (let i = 0; i < this.leaderboardCount; i++) {
+            const item = this.leaderboard[i];
             if (item == null)
                 return null; // bad leaderboard just don't send it
             if (item === this.playerTracker) {
@@ -133,7 +133,7 @@ class UpdateLeaderboard {
                 writer.writeUInt16(1);
             }
             else {
-                var name = item._name;
+                const name = item._name;
                 writer.writeUInt8(0x02);
                 if (name != null && name.length)
                     writer.writeStringZeroUtf8(name);
@@ -141,8 +141,8 @@ class UpdateLeaderboard {
                     writer.writeUInt8(0);
             }
         }
-        var thing = this.leaderboard.indexOf(this.playerTracker) + 1;
-        var place = (thing <= 10) ? null : thing;
+        const thing = this.leaderboard.indexOf(this.playerTracker) + 1;
+        const place = (thing <= 10) ? null : thing;
         if (this.playerTracker.cells.length && place != null) {
             writer.writeUInt8(0x09);
             writer.writeUInt16(place);
@@ -152,17 +152,17 @@ class UpdateLeaderboard {
     // Party
     // TODO: Implement the "minimap"
     buildParty() {
-        var protocol13s = 0;
-        for (var i in this.playerTracker.server.clients) {
-            var client = this.playerTracker.server.clients[i].packetHandler;
+        let protocol13s = 0;
+        for (const i in this.playerTracker.server.clients) {
+            const client = this.playerTracker.server.clients[i].packetHandler;
             if (client.protocol >= 13)
                 protocol13s++;
         }
-        var writer = new BinaryWriter();
+        const writer = new BinaryWriter();
         writer.writeUInt8(0x34); // Packet ID
         writer.writeUInt16(protocol13s); // How many friends are in-game
-        for (var i = 0; i < this.leaderboardCount; i++) {
-            var item = this.leaderboard[i];
+        for (let i = 0; i < this.leaderboardCount; i++) {
+            const item = this.leaderboard[i];
             if (item == null)
                 return null; // bad leaderboard just don't send it
             if (item === this.playerTracker) {
@@ -170,7 +170,7 @@ class UpdateLeaderboard {
                 writer.writeUInt16(1);
             }
             else {
-                var name = item._name;
+                const name = item._name;
                 writer.writeUInt8(0x02);
                 if (name != null && name.length)
                     writer.writeStringZeroUtf8(name);
@@ -178,8 +178,8 @@ class UpdateLeaderboard {
                     writer.writeUInt8(0);
             }
         }
-        var thing = this.leaderboard.indexOf(this.playerTracker) + 1;
-        var place = (thing <= 10) ? null : thing;
+        const thing = this.leaderboard.indexOf(this.playerTracker) + 1;
+        const place = (thing <= 10) ? null : thing;
         if (this.playerTracker.cells.length && place != null) {
             writer.writeUInt16(place);
         }
@@ -187,10 +187,10 @@ class UpdateLeaderboard {
     }
     // Team
     buildTeam() {
-        var writer = new BinaryWriter();
+        const writer = new BinaryWriter();
         writeCount(writer, 0x32, this.leaderboard.length);
-        for (var i = 0; i < this.leaderboard.length; i++) {
-            var value = this.leaderboard[i];
+        for (let i = 0; i < this.leaderboard.length; i++) {
+            let value = this.leaderboard[i];
             if (value == null)
                 return null; // bad leaderboardm just don't send it
             if (isNaN(value))
