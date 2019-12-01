@@ -3,13 +3,13 @@ class ServerStat {
         this.playerTracker = playerTracker;
     }
     build(protocol) {
-        var server = this.playerTracker.server;
+        const server = this.playerTracker.server;
         // Get server statistics
-        var totalPlayers = 0;
-        var alivePlayers = 0;
-        var spectPlayers = 0;
-        for (var i = 0; i < server.clients.length; i++) {
-            var socket = server.clients[i];
+        let totalPlayers = 0;
+        let alivePlayers = 0;
+        let spectPlayers = 0;
+        for (let i = 0; i < server.clients.length; i++) {
+            const socket = server.clients[i];
             if (socket == null || !socket.isConnected)
                 continue;
             totalPlayers++;
@@ -18,7 +18,7 @@ class ServerStat {
             else
                 spectPlayers++;
         }
-        var obj = {
+        const obj = {
             'name': server.config.serverName,
             'mode': server.mode.name,
             'uptime': Math.round((server.stepDateTime - server.startTime) / 1000),
@@ -28,10 +28,10 @@ class ServerStat {
             'playersSpect': spectPlayers,
             'playersLimit': server.config.serverMaxConnections
         };
-        var json = JSON.stringify(obj);
+        const json = JSON.stringify(obj);
         // Serialize
-        var BinaryWriter = require("./BinaryWriter");
-        var writer = new BinaryWriter();
+        const BinaryWriter = require("./BinaryWriter");
+        const writer = new BinaryWriter();
         writer.writeUInt8(254); // Message Id
         writer.writeStringZeroUtf8(json); // JSON
         return writer.toBuffer();
