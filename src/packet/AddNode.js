@@ -1,4 +1,4 @@
-var BinaryWriter = require("./BinaryWriter");
+const BinaryWriter = require("./BinaryWriter");
 
 class AddNode {
     constructor(playerTracker, item) {
@@ -6,7 +6,7 @@ class AddNode {
         this.item = item;
     }
     build(protocol) {
-        var writer = new BinaryWriter();
+        const writer = new BinaryWriter();
         writer.writeUInt8(0x20); // Packet ID
         writer.writeUInt32((this.item.nodeId ^ this.playerTracker.scrambleId) >>> 0);
         return writer.toBuffer();
