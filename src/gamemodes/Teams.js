@@ -32,7 +32,7 @@ class Teams extends Mode{
         return component;
     }
     getTeamColor(team) {
-        const color = this.colors[team];
+        let color = this.colors[team];
         return {
             r: this.fuzzColorComponent(color.r),
             b: this.fuzzColorComponent(color.b),
@@ -53,11 +53,11 @@ class Teams extends Mode{
         }
         // migrate current players to team mode
         for (let i = 0; i < server.clients.length; i++) {
-            let client = server.clients[i].playerTracker;
+            const client = server.clients[i].playerTracker;
             this.onPlayerInit(client);
             client.color = this.getTeamColor(client.team);
             for (let j = 0; j < client.cells.length; j++) {
-                let cell = client.cells[j];
+                const cell = client.cells[j];
                 cell.color = client.color;
                 this.nodes[client.team].push(cell);
             }
@@ -89,7 +89,7 @@ class Teams extends Mode{
             // Collision with teammates
             const team = cell.owner.team;
             if (check.owner.team == team) {
-                let manifold = server.checkCellCollision(cell, check); // Calculation info
+                const manifold = server.checkCellCollision(cell, check); // Calculation info
                 if (manifold != null) { // Collided
                     // Cant eat team members
                     !manifold.check.canEat(manifold.cell);
@@ -100,7 +100,7 @@ class Teams extends Mode{
     updateLB(server) {
         server.leaderboardType = this.packetLB;
         let total = 0;
-        let teamMass = [];
+        const teamMass = [];
         // Get mass
         for (let i = 0; i < this.teamAmount; i++) {
             // Set starting mass
