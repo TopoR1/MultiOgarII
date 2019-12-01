@@ -1,4 +1,4 @@
-var Mode = require('./Mode');
+const Mode = require('./Mode');
 
 class FFA extends Mode {
     constructor() {
@@ -15,12 +15,12 @@ class FFA extends Mode {
     }
     updateLB(server, lb) {
         server.leaderboardType = this.packetLB;
-        for (var i = 0, pos = 0; i < server.clients.length; i++) {
-            var player = server.clients[i].playerTracker;
+        for (let i = 0, pos = 0; i < server.clients.length; i++) {
+            let player = server.clients[i].playerTracker;
             if (player.isRemoved || !player.cells.length ||
                 player.socket.isConnected == false || (!server.config.minionsOnLeaderboard && player.isMi))
                 continue;
-            for (var j = 0; j < pos; j++)
+            for (let j = 0; j < pos; j++)
                 if (lb[j]._score < player._score)
                     break;
             lb.splice(j, 0, player);
