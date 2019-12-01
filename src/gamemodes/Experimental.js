@@ -1,5 +1,5 @@
-var FFA = require('./FFA'); // Base gamemode
-var Entity = require('../entity');
+const FFA = require('./FFA'); // Base gamemode
+const Entity = require('../entity');
 
 class Experimental extends FFA {
     constructor() {
@@ -20,7 +20,7 @@ class Experimental extends FFA {
             return;
         }
         // Spawn if no cells are colliding
-        var mother = new Entity.MotherCell(server, null, server.randomPos(), 149);
+        const mother = new Entity.MotherCell(server, null, server.randomPos(), 149);
         if (!server.willCollide(mother))
             server.addNode(mother);
     }
@@ -29,7 +29,7 @@ class Experimental extends FFA {
         // Called when the server starts
         server.run = true;
         // Ovveride functions for special virus mechanics
-        var self = this;
+        const self = this;
         Entity.Virus.prototype.onEat = function (prey) {
             // Pushes the virus
             this.setBoost(220, prey.boostDirection.angle());
@@ -38,7 +38,7 @@ class Experimental extends FFA {
             self.nodesMother.push(this);
         };
         Entity.MotherCell.prototype.onRemove = function () {
-            var index = self.nodesMother.indexOf(this);
+            const index = self.nodesMother.indexOf(this);
             if (index != -1)
                 self.nodesMother.splice(index, 1);
         };
@@ -48,9 +48,9 @@ class Experimental extends FFA {
         if ((server.ticks % this.motherSpawnInterval) === 0) {
             this.spawnMotherCell(server);
         }
-        var updateInterval;
-        for (var i = 0; i < this.nodesMother.length; ++i) {
-            var motherCell = this.nodesMother[i];
+        let updateInterval;
+        for (let i = 0; i < this.nodesMother.length; ++i) {
+            const motherCell = this.nodesMother[i];
             if (motherCell._size <= motherCell.motherCellMinSize)
                 updateInterval = Math.random() * (50 - 25) + 25;
             else
