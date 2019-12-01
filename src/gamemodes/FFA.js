@@ -16,7 +16,7 @@ class FFA extends Mode {
     updateLB(server, lb) {
         server.leaderboardType = this.packetLB;
         for (let i = 0, pos = 0; i < server.clients.length; i++) {
-            let player = server.clients[i].playerTracker;
+            const player = server.clients[i].playerTracker;
             if (player.isRemoved || !player.cells.length ||
                 player.socket.isConnected == false || (!server.config.minionsOnLeaderboard && player.isMi))
                 continue;
@@ -32,6 +32,3 @@ class FFA extends Mode {
 
 module.exports = FFA;
 FFA.prototype = new Mode();
-
-
-
