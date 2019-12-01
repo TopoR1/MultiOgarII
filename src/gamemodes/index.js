@@ -6,8 +6,8 @@ module.exports = {
     Rainbow: require('./Rainbow'),
 };
 
-var get = function (id) {
-    var mode;
+const get = function (id) {
+    let mode;
     switch (parseInt(id)) {
         case 1: // Teams
             mode = new module.exports.Teams();
