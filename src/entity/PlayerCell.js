@@ -1,5 +1,5 @@
-var Cell = require('./Cell');
-var Packet = require('../packet');
+const Cell = require('./Cell');
+const Packet = require('../packet');
 
 class PlayerCell extends Cell {
     constructor(server, owner, position, size) {
