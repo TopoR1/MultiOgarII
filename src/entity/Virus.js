@@ -18,14 +18,6 @@ class Virus extends Cell {
         if (this.server.nodesVirus.length < this.server.config.virusMaxAmount)
             return cell.type == 3; // virus can eat ejected mass only
     }
-    onEat(prey) {
-        // Called to eat prey cell
-        this.setSize(Math.sqrt(this.radius + prey.radius));
-        if (this._size >= this.server.config.virusMaxSize) {
-            this.setSize(this.server.config.virusMinSize); // Reset mass
-            this.server.shootVirus(this, prey.boostDirection.angle());
-        }
-    }
     onEaten(cell) {
         if (!cell.owner)
             return;
