@@ -401,11 +401,28 @@ class Server {
                 }
             }
         }
+        
+        message = this.checkBadSymbols(message);
+        
         if (this.checkBadWord(message) && from && this.config.badWordFilter === 1) {
             this.sendChatMessage(null, from, "Message failed - Stop insulting others! Keep calm and be friendly please.");
             return;
         }
         this.sendChatMessage(from, to, message);
+    }
+    checkBadSymbols(text) {
+        for (var i = 0; i < text.length; i++) {
+            if ((text.charCodeAt(i) >= 0x600 && text.charCodeAt(i) <= 0x6FF) || (text.charCodeAt(i) >= 0x750 && text.charCodeAt(i) <= 0x77F) || (text.charCodeAt(i) >= 0x8A0 && text.charCodeAt(i) <= 0x8FF) || (text.charCodeAt(i) >= 0xFB50 && text.charCodeAt(i) <= 0xFDFF) || (text.charCodeAt(i) >= 0xFE70 && text.charCodeAt(i) <= 0xFEFF) || (text.charCodeAt(i) >= 0x10E60 && text.charCodeAt(i) <= 0x10E7F) || (text.charCodeAt(i) >= 0x1EE00 && text.charCodeAt(i) <= 0x1EEFF)) {
+                text = this.setCharAt(text, i, ' ');
+            }
+        }
+        
+        return text.replace(/\s+/g, ' ').trim();
+    }
+    setCharAt(str, index, chr) {
+        if (index > str.length - 1) return str;
+        
+        return str.substring(0, index) + chr + str.substring(index + 1);
     }
     checkBadWord(value) {
         if (!(value = value.trim())) return false;
